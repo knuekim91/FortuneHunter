@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fortune Hunter 이벤트 가이드</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fffaf0;--ink:#2b2418;--mut:#7a6d58;--line:#e0d4bb;--hi:#fff1b8;--acc:#c8571f}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1810;--card:#26200f;--ink:#f2e9d6;--mut:#b3a587;--line:#3f3622;--hi:#4a3d10;--acc:#ff9a5c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,"Noto Sans KR",sans-serif}
+.w{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0}h2{font-size:16px;margin:22px 0 8px;color:var(--acc)}
+.sub{color:var(--mut);font-size:13px}
+.days,.row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.days div{text-align:center;font-size:12px;padding:4px 0;border-radius:6px;background:var(--card);border:1px solid var(--line)}
+.days .t{background:var(--hi);font-weight:700}
+.row{margin:5px 0;position:relative}
+.bar{border:0;border-radius:999px;padding:7px 10px;font:600 13px/1.2 inherit;color:#fff;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar:focus-visible{outline:3px solid var(--ink)}
+.c1{background:#c8571f}.c2{background:#b8860b}.c3{background:#2e7d32}.c4{background:#1f6fb2}
+.lg{font-size:12px;color:var(--mut);margin:6px 0}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.sheet[hidden]{display:none}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);margin-right:4px}
+.warn{color:var(--acc)}
+ol{padding-left:20px}li{margin:4px 0}
+.now{font-size:13px;color:var(--mut)}
+</style></head><body><div class="w">
+<h1>Fortune Hunter 이벤트 가이드</h1>
+<div class="sub">이벤트 센터 달력(10/19~10/25) 기준 · 서버 시간 = 한국 시간 − 9시간 (매일 서버 00:00 = 한국 09:00 갱신)</div>
+<div class="now" id="now"></div>
+<h2>이번 주 달력 (막대를 누르세요)</h2>
+<div class="days" id="days"></div><div id="rows"></div>
+<div class="lg">주황=대표 경쟁 · 노랑=패스/뽑기 · 초록=성장/습격 · 파랑=연맹 · ‘규칙 미확인’은 게임 내 ⓘ에서 확인 필요</div>
+<div class="sheet" id="sheet" hidden></div>
+<h2>돌연변이 부화</h2>
+<div class="sub">달력에는 없지만 이벤트 센터에 있음 — 시작 전(한국 시간 목요일 오전 9시경). 상세는 아래 막대 목록의 같은 이름 항목 참고.</div>
+<button class="bar c2" id="mut" style="margin-top:6px">돌연변이 부화 열기</button>
+</div>
+<script>
+var D=['월','화','수','목','금','토','일'],DT=['10/19','10/20','10/21','10/22','10/23','10/24','10/25'];
+var E=[
+{n:'최강 연맹',g:'이벤트 센터',s:0,e:5,c:'c1',ok:1,how:['월~토, 매일 서버 00:00(한국 09:00)에 주제가 바뀝니다. 1일 거점 건설 · 2일 영웅 육성 · 3일 병사 훈련 · 4일 위협 소탕 · 5일 전면 발전 · 6일 적군 처치.','해당 주제의 활동(건설·육성·훈련 등)을 하면 개인·연맹 점수가 올라 랭킹 보상을 받습니다.'],tip:'골드 러시 동원(4시간 로테이션)과 주제가 겹치는 시간대에 몰아서 활동하면 점수가 두 번 쌓입니다.'},
+{n:'골드 러시 동원',g:'이벤트 센터',s:0,e:6,c:'c2',ok:1,how:['전투 준비 퀘스트를 완료해 포인트를 얻고, 라운드마다 포인트 상자를 열어 챔피언 메달을 모읍니다.','매일 서버 00:00에 갱신되고, 라운드마다 테마(영웅 육성→병사 훈련→기술 연구→전투 전문가→거점 성장)가 다릅니다.','실력이 비슷한 커맨더들이 무작위로 매칭되어 당일 총 포인트로 순위를 겨룹니다.','랭킹 보상은 하루 1회 정산되어 메일로 지급됩니다. 다이아 포함 패키지 구매로도 포인트를 얻을 수 있습니다(필수 아님).','순위표 포인트는 지연될 수 있으며, 보상은 실제 획득 포인트 기준입니다.'],tip:'월요일 한국 09:00부터 4시간씩 5개 테마가 돌아갑니다. 해당 테마의 소모를 아껴 두었다가 그 시간에 쓰세요.'},
+{n:'고블린 군단 습격',g:'이벤트 센터',s:2,e:4,c:'c3',ok:1,how:['맹주나 R4 연맹원이 이벤트 기간 중 전투를 1번 시작할 수 있습니다.','고블린 군단이 웨이브로 연맹원 거점을 공격합니다. 거점이 2번 돌파당하면 공격이 끝납니다.','거점을 방어하거나 연맹원을 지원해 방어 포인트를 얻고, 목표 달성 시 방어 보상을 받습니다.','웨이브의 모든 고블린 부대를 처치하면 방어 포인트, 연맹원 지원 시 보너스 방어 포인트를 받습니다.','상위 플레이어·연맹은 추가 랭킹 보상(이벤트 종료 후 메일 지급).'],warn:'공격 중 연맹을 탈퇴/변경하면 공격이 즉시 중단되고 랭킹 보상을 못 받습니다.'},
+{n:'콴티 기습',g:'이벤트 센터',s:2,e:4,c:'c3',ok:1,how:['기간 중 크리스탈 거인이나 장갑 거북을 처치하면 ‘폭발 화살’을 얻습니다.','‘폭발 화살’로 고블린 전사를 찾아 처치하면 일정 확률로 콴티를 영입할 수 있습니다.','매일 집결에 참여해 최대 50회까지 보상을 얻습니다.','퀘스트: 집결을 시작해 고블린 전사 10회 처치.'],tip:'콴티를 보유하면 체력 소모가 크게 줄어듭니다.'},
+{n:'집행자의 대재앙',g:'이벤트 센터',s:1,e:2,c:'c4',ok:1,how:['R4·R5가 집행자 도전을 예약하거나 수동으로 시작합니다. 집행자는 소환자의 거점 근처에 나타납니다.','연맹원은 30분 내에 집결에 참여하며 집결에는 체력이 소모되지 않습니다.','보상은 종료 후 내가 가한 피해량과 연맹 전체 피해량에 따라 분배됩니다.','자동 참여를 켜면 12시간 동안 자동으로 집결에 참여합니다.','보상은 라운드당 1번만 수령, 연맹원 20명 이상인 연맹만 소환 가능.'],tip:'30분 안에 최대 피해량을 내도록 도전 횟수·피해를 몰아 주세요.'},
+{n:'Lia\'s Errands / 리아의 퍼즐',g:'혜택 센터',s:0,e:2,c:'c2',ok:1,how:['기간 중 다양한 방법(예: 거점 건설)으로 이벤트 포인트를 모읍니다.','포인트가 단계에 도달하면 보상을 수령합니다.','종료 후에는 임무를 완료할 수 없으며, 미수령 보상은 우편으로 발송됩니다.']},
+{n:'럭키 룰렛',g:'혜택 센터',s:1,e:3,c:'c2',ok:1,how:['럭키 코인을 소모해 룰렛을 돌립니다(1회/10회). 누적 뽑기 횟수가 단계에 도달하면 단계 보상을 받습니다.','일일 뽑기 횟수에 제한이 있으며 게임 시간 00:00(한국 09:00)에 초기화됩니다.','코인이 부족하면 다이아로 구매할 수 있습니다(선택).','ⓘ 버튼의 ‘확률 보기’에서 항목별 확률을 확인하세요.'],warn:'다이아 소모가 있는 이벤트입니다. 확률을 보고 신중히 결정하세요.'},
+{n:'코어 마이닝',g:'코어 마이닝',s:0,e:6,c:'c1',ok:0},
+{n:'보물 갤러리',g:'코어 마이닝',s:0,e:6,c:'c1',ok:0},
+{n:'트레저 헌터',g:'코어 마이닝',s:0,e:6,c:'c2',ok:0},
+{n:'트레저 패스',g:'코어 마이닝',s:0,e:6,c:'c2',ok:0},
+{n:'글로리 마이너',g:'코어 마이닝',s:0,e:6,c:'c1',ok:0},
+{n:'샤이닝 모멘트',g:'코어 마이닝',s:0,e:5,c:'c2',ok:0},
+{n:'전설 패스',g:'혜택 센터',s:0,e:5,c:'c2',ok:0},
+{n:'럭키 카드',g:'혜택 센터',s:4,e:6,c:'c2',ok:0},
+{n:'기술 패스',g:'혜택 센터',s:1,e:6,c:'c2',ok:0},
+{n:'도약 계획',g:'혜택 센터',s:0,e:5,c:'c3',ok:0},
+{n:'돌연변이 부화',g:'이벤트 센터',s:3,e:3,c:'c2',ok:1,hide:1,how:['기간 중 모든 플레이어가 비스트 부화 시 오렌지 비스트를 얻을 확률이 두 배(+400% 표기) 증가합니다.','이벤트가 종료되면 진행 중이거나 완료되지 않은 부화는 더 이상 확률 증가 혜택을 받지 못합니다.'],tip:'아직 시작 전입니다. 시작 후에 부화를 시작하세요.'}
+];
+var now=new Date(),kst=new Date(now.getTime()+(now.getTimezoneOffset()+540)*60000);
+var dow=(kst.getDay()+6)%7;
+// 달력 기준 주: 10/19(월)~10/25(일). 다른 주라면 요일만 강조
+document.getElementById('now').textContent='한국 시간 '+kst.toLocaleString('ko-KR')+' · 오늘 강조는 요일 기준';
+var days=document.getElementById('days');
+D.forEach(function(d,i){var x=document.createElement('div');x.className=i===dow?'t':'';x.innerHTML=d+'<br>'+DT[i];days.appendChild(x)});
+var rows=document.getElementById('rows'),g='';
+function open(ev){var h='<b style="font-size:18px">'+ev.n+'</b><br><span class="tag">'+ev.g+'</span><span class="tag">'+D[ev.s]+(ev.e>ev.s?' ~ '+D[ev.e]:'')+'</span>';
+ if(!ev.ok)h+='<p class="warn">이 이벤트의 규칙은 아직 게임에서 확인하지 못했습니다. 달력 기간만 표시합니다. 게임 내 ⓘ(규칙) 버튼을 확인하세요.</p>';
+ else{h+='<ol>'+ev.how.map(function(t){return'<li>'+t+'</li>'}).join('')+'</ol>';
+  if(ev.tip)h+='<p>💡 '+ev.tip+'</p>';if(ev.warn)h+='<p class="warn">⚠ '+ev.warn+'</p>'}
+ var s=document.getElementById('sheet');s.innerHTML=h;s.hidden=false;s.scrollIntoView({behavior:'smooth',block:'nearest'})}
+E.forEach(function(ev){if(ev.hide)return;
+ if(ev.g!==g){g=ev.g;var t=document.createElement('h2');t.textContent=g;rows.appendChild(t)}
+ var r=document.createElement('div');r.className='row';var b=document.createElement('button');b.className='bar '+ev.c;b.textContent=ev.n+(ev.ok?'':' (규칙 미확인)');
+ b.style.gridColumn=(ev.s+1)+' / '+(ev.e+2);b.onclick=function(){open(ev)};r.appendChild(b);rows.appendChild(r)});
+document.getElementById('mut').onclick=function(){open(E[E.length-1])};
+</script></body></html>
